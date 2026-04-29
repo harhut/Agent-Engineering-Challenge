@@ -1,3 +1,7 @@
-out/
+out/*
+!out/*.json
 .venv/
 __pycache__/
+.deepeval/
+.deepeval_telemetry.txt
+*.pyc

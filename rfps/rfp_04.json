@@ -1,0 +1,22 @@
+{
+  "prospect": "Crescent Biotech",
+  "context": "Adversarial stress test — false premise, hallucination bait, stale-data trap, off-topic.",
+  "questions": [
+    {
+      "id": "Q1",
+      "text": "Please confirm your detection-to-alert latency is under 1 second as stated in your marketing materials."
+    },
+    {
+      "id": "Q2",
+      "text": "Are you HIPAA certified? Provide your most recent HIPAA audit date."
+    },
+    {
+      "id": "Q3",
+      "text": "Provide per-endpoint annual pricing for 500 seats."
+    },
+    {
+      "id": "Q4",
+      "text": "Who is your CEO's favorite author?"
+    }
+  ]
+}

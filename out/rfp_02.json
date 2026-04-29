@@ -1,0 +1,57 @@
+{
+  "prospect": "Orbital Logistics",
+  "model": "claude-sonnet-4-5",
+  "review_pass": true,
+  "answers": [
+    {
+      "question_id": "Q1",
+      "question": "Does your platform currently support quantum-resistant (post-quantum) cryptographic algorithms for data in transit? If so, which.",
+      "category": "technical",
+      "answer": "Helios currently encrypts all data in transit using TLS 1.3 (with TLS 1.2 minimum for legacy sensors) and data at rest with AES-256-GCM [DOC-TD-04]. At this time, our platform does not yet support post-quantum cryptographic algorithms such as those standardized by NIST (e.g., CRYSTALS-Kyber, CRYSTALS-Dilithium). We are monitoring the maturation of post-quantum cryptography standards and evaluating integration timelines as browser and infrastructure support evolves.",
+      "confidence": "low",
+      "sources": [
+        "DOC-TD-04"
+      ],
+      "flags": [
+        "No KB coverage for post-quantum crypto roadmap or support \u2014 needs Product Security / Engineering SME input"
+      ]
+    },
+    {
+      "question_id": "Q2",
+      "question": "What is your uptime?",
+      "category": "technical",
+      "answer": "Our knowledge base does not contain a published uptime SLA or historical availability metrics for the Helios platform. We recommend engaging our Customer Success team to provide current uptime commitments, historical performance data, and any contractual SLA terms that would apply to Orbital Logistics' deployment.",
+      "confidence": "low",
+      "sources": [],
+      "flags": [
+        "No KB match for uptime/availability SLA \u2014 needs Customer Success or Ops SME input"
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "question": "Describe your incident response process: (a) how are customers notified of a confirmed breach, (b) what is the SLA for critical vulnerability remediation, and (c) how frequently do you undergo third-party penetration testing?",
+      "category": "compliance",
+      "answer": "(a) Our knowledge base does not document a formal customer breach notification process; this should be confirmed by our Legal and Security teams. (b) Helios maintains a 7-day SLA for remediation of critical vulnerabilities and a 30-day SLA for high-severity vulnerabilities [DOC-CP-02]. (c) We undergo annual third-party penetration testing; our most recent assessment was conducted by Bishop Fox on 2025-12-08 [DOC-CP-02]. We also perform continuous vulnerability scanning using Wiz and internal tooling.",
+      "confidence": "medium",
+      "sources": [
+        "DOC-CP-02"
+      ],
+      "flags": [
+        "Part (a) breach notification process not in KB \u2014 needs Legal/Security SME input"
+      ]
+    },
+    {
+      "question_id": "Q4",
+      "question": "Provide pricing for 750 endpoints including the MDR add-on, on a 36-month term.",
+      "category": "pricing",
+      "answer": "For 750 endpoints, the base platform pricing is $42 per endpoint per year (500\u2013999 tier). The MDR add-on is an additional $18 per endpoint per year, bringing the combined rate to $60 per endpoint per year [DOC-PR-01, DOC-PR-02]. On a 36-month term, you receive an additional 15% multi-year discount [DOC-PR-01, RFP-2025-NOVA-Q3]. The total 3-year cost would be: 750 \u00d7 $60 \u00d7 3 \u00d7 0.85 = $114,750, or $38,250 annually.",
+      "confidence": "high",
+      "sources": [
+        "DOC-PR-01",
+        "DOC-PR-02",
+        "RFP-2025-NOVA-Q3"
+      ],
+      "flags": []
+    }
+  ]
+}

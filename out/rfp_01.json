@@ -1,0 +1,65 @@
+{
+  "prospect": "Northwind Financial",
+  "model": "claude-sonnet-4-5",
+  "review_pass": true,
+  "answers": [
+    {
+      "question_id": "Q1",
+      "question": "Describe your platform's approach to real-time threat detection. What data sources are ingested, and what is the average detection-to-alert latency?",
+      "category": "technical",
+      "answer": "Helios EDR ingests endpoint telemetry (process, file, registry, network), cloud audit logs (AWS CloudTrail, Azure Activity, GCP Audit), identity events (Okta, Azure AD), and network flow data via the Helios Sensor [DOC-TD-01]. Events stream into the Helios Detection Engine, which runs a layered pipeline: signature rules, behavioral analytics, and an ML anomaly model retrained weekly [DOC-TD-01]. Our median detection-to-alert latency is 1.8 seconds, with a 95th percentile of 4.2 seconds, measured end-to-end from sensor event emission to alert visible in the Helios Console [DOC-TD-02]. These benchmarks are run monthly against the MITRE ATT&CK evaluation harness on a 10,000-endpoint reference deployment [DOC-TD-02].",
+      "confidence": "high",
+      "sources": [
+        "DOC-TD-01",
+        "DOC-TD-02"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q2",
+      "question": "List all compliance certifications your organization currently holds (SOC 2, ISO 27001, FedRAMP, etc.) and the date of most recent audit for each.",
+      "category": "compliance",
+      "answer": "Helios currently holds the following certifications [DOC-CP-01]: SOC 2 Type II (most recent audit report dated February 14, 2026, audited by Schellman); ISO/IEC 27001:2022 (certificate issued September 30, 2025, surveillance audit March 10, 2026); ISO/IEC 27701 (certified September 30, 2025); PCI DSS 4.0 SAQ-D (attestation November 5, 2025). FedRAMP Moderate is currently In Process, with 3PAO assessment underway and ATO target of Q4 2026 [DOC-CP-01]. We are also GDPR-compliant with a Data Processing Agreement available [DOC-CP-01].",
+      "confidence": "high",
+      "sources": [
+        "DOC-CP-01"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q3",
+      "question": "Provide per-seat pricing for 500, 1,000, and 5,000 endpoints. Are volume discounts available? Is there a minimum contract term?",
+      "category": "pricing",
+      "answer": "Helios per-endpoint annual list pricing (USD) is tiered as follows [DOC-PR-01]: 500 endpoints: $42/endpoint ($21,000/year); 1,000 endpoints: $36/endpoint ($36,000/year); 5,000 endpoints: $30/endpoint ($150,000/year). Volume discounts are built into these tiers, with additional negotiated discounts available at 10,000+ endpoints [DOC-PR-01]. The minimum contract term is 12 months; multi-year agreements earn additional discounts of 8% (24 months) or 15% (36 months) [DOC-PR-01]. If you add our Managed Detection & Response (24x7 SOC) service, it is +$18/endpoint/year with a 250-endpoint minimum [DOC-PR-02].",
+      "confidence": "high",
+      "sources": [
+        "DOC-PR-01",
+        "DOC-PR-02"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q4",
+      "question": "How many customers do you currently serve in the financial services vertical? Provide 2-3 reference accounts.",
+      "category": "company-info",
+      "answer": "Helios serves 87 customers in the financial services vertical as of Q1 2026 [DOC-CI-01]. We would be pleased to arrange reference calls with the following financial services accounts (with permission to share): RidgePoint Capital, Meridian Credit Union, and Atlas Insurance Group [DOC-CI-01]. These organizations can speak to our platform capabilities, partnership approach, and track record in highly regulated environments.",
+      "confidence": "high",
+      "sources": [
+        "DOC-CI-01"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q5",
+      "question": "How does your platform handle data residency requirements for customers operating in the EU? Describe encryption at rest and in transit.",
+      "category": "technical",
+      "answer": "Customers select a home region at provisioning; EU customers are deployed to our eu-central-1 (Frankfurt) cell, where all telemetry, detections, and case data remain in-region [DOC-TD-03]. Cross-region replication is disabled by default to ensure compliance with data residency requirements [DOC-TD-03]. All data in transit is encrypted via TLS 1.3 (TLS 1.2 minimum for legacy sensors), and data at rest is encrypted with AES-256-GCM using customer-scoped keys managed in AWS KMS [DOC-TD-04]. Enterprise tier customers may bring their own KMS key (BYOK) for additional control [DOC-TD-04].",
+      "confidence": "high",
+      "sources": [
+        "DOC-TD-03",
+        "DOC-TD-04"
+      ],
+      "flags": []
+    }
+  ]
+}

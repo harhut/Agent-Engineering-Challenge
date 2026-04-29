@@ -170,6 +170,17 @@ DOCS = [
             "15% (3yr). Pricing is per-endpoint annual; see pricing sheet for tiers."
         ),
     },
+    {
+        "id": "DOC-PR-01-2024",
+        "category": "pricing",
+        "title": "Endpoint Pricing Sheet (Legacy 2024 — superseded)",
+        "content": (
+            "ARCHIVED. List pricing effective Jan 2024 (superseded by current sheet): "
+            "1-999 endpoints: $48/endpoint/year; 1,000-4,999: $40/endpoint/year; "
+            "5,000+: $34/endpoint/year. 12-month minimum term. Multi-year: 5% (2yr), "
+            "10% (3yr). NOTE: This sheet is outdated; refer to current pricing."
+        ),
+    },
 ]
 
 

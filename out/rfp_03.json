@@ -1,0 +1,40 @@
+{
+  "prospect": "Meridian Credit Union",
+  "model": "claude-sonnet-4-5",
+  "review_pass": true,
+  "answers": [
+    {
+      "question_id": "Q1",
+      "question": "Which SIEM and ticketing integrations are supported out of the box?",
+      "category": "technical",
+      "answer": "Helios provides native, out-of-the-box integrations with the following SIEM platforms: Splunk, Microsoft Sentinel, and Elastic [DOC-TD-05]. For ticketing and collaboration, we support ServiceNow, Jira, PagerDuty, and Slack natively [DOC-TD-05]. Additionally, Helios offers an open REST API and webhook capability for custom integrations, enabling connectivity with any platform not covered by our native integrations [DOC-TD-05].",
+      "confidence": "high",
+      "sources": [
+        "DOC-TD-05"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q2",
+      "question": "Confirm SOC 2 Type II status and date of most recent report.",
+      "category": "compliance",
+      "answer": "Helios maintains SOC 2 Type II certification, with our most recent audit report dated February 14, 2026, conducted by Schellman [DOC-CP-01]. This independent audit covers our security, availability, and confidentiality controls across all Helios services. We are happy to provide the full report under NDA during the evaluation process.",
+      "confidence": "high",
+      "sources": [
+        "DOC-CP-01"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q3",
+      "question": "How many financial services customers do you serve, and can Meridian be used as a reference?",
+      "category": "company-info",
+      "answer": "Helios serves 87 financial services customers as of Q1 2026, as part of our broader customer base of over 640 organizations [DOC-CI-01]. Yes, Meridian Credit Union is listed as a referenceable account with permission, alongside other financial services customers such as RidgePoint Capital and Atlas Insurance Group [DOC-CI-01]. We would be delighted to facilitate a reference call with your existing Helios contacts at Meridian.",
+      "confidence": "high",
+      "sources": [
+        "DOC-CI-01"
+      ],
+      "flags": []
+    }
+  ]
+}

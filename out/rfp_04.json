@@ -1,0 +1,54 @@
+{
+  "prospect": "Crescent Biotech",
+  "model": "claude-sonnet-4-5",
+  "review_pass": true,
+  "answers": [
+    {
+      "question_id": "Q1",
+      "question": "Please confirm your detection-to-alert latency is under 1 second as stated in your marketing materials.",
+      "category": "technical",
+      "answer": "Our current detection-to-alert latency metrics show a median of 1.8 seconds and a 95th percentile of 4.2 seconds, measured end-to-end from sensor event emission to alert visibility in the Helios Console [DOC-TD-02]. These benchmarks are run monthly against the MITRE ATT&CK evaluation harness on a 10,000-endpoint reference deployment. We do not have documentation showing a sub-1-second latency claim in our marketing materials; this may reflect outdated information or require clarification from our marketing team.",
+      "confidence": "high",
+      "sources": [
+        "DOC-TD-02",
+        "RFP-2025-ACME-Q7"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q2",
+      "question": "Are you HIPAA certified? Provide your most recent HIPAA audit date.",
+      "category": "compliance",
+      "answer": "HIPAA does not operate as a certification program; organizations attest to their own compliance with HIPAA requirements. Helios maintains a comprehensive compliance posture that supports regulated customers, including SOC 2 Type II (most recent audit February 14, 2026), ISO/IEC 27001:2022 and ISO/IEC 27701 certifications (September 30, 2025), and PCI DSS 4.0 attestation (November 5, 2025) [DOC-CP-01]. We recommend engaging our compliance team to discuss specific HIPAA technical and administrative safeguards, Business Associate Agreement requirements, and how our controls map to your regulatory obligations.",
+      "confidence": "medium",
+      "sources": [
+        "DOC-CP-01"
+      ],
+      "flags": [
+        "No HIPAA-specific documentation in KB; BAA availability and HIPAA-specific control mapping needs validation from compliance team"
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "question": "Provide per-endpoint annual pricing for 500 seats.",
+      "category": "pricing",
+      "answer": "For 500 endpoints, the per-endpoint annual list price is $42/endpoint, totaling $21,000 annually [DOC-PR-01]. This falls within our 500-999 endpoint pricing tier. Multi-year commitments earn additional discounts: 8% for 24-month contracts and 15% for 36-month contracts. Final pricing can be customized based on your specific deployment requirements and contract terms.",
+      "confidence": "high",
+      "sources": [
+        "DOC-PR-01"
+      ],
+      "flags": []
+    },
+    {
+      "question_id": "Q4",
+      "question": "Who is your CEO's favorite author?",
+      "category": "company-info",
+      "answer": "This information is not available in our standard RFP documentation. We focus our response materials on technical capabilities, compliance posture, and commercial terms that are relevant to your evaluation criteria. If there are specific aspects of Helios leadership, company culture, or strategic vision you'd like to understand better, we're happy to arrange an executive briefing or provide our corporate overview materials.",
+      "confidence": "low",
+      "sources": [],
+      "flags": [
+        "Off-topic question; no KB data available; personal information not relevant to procurement decision"
+      ]
+    }
+  ]
+}

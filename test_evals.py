@@ -16,7 +16,11 @@ import pytest
 from pathlib import Path
 
 from deepeval import assert_test
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase
+try:
+    from deepeval.test_case import SingleTurnParams as LLMTestCaseParams
+except ImportError:
+    from deepeval.test_case import LLMTestCaseParams
 from deepeval.metrics import GEval, FaithfulnessMetric
 from deepeval.models import AnthropicModel
 
@@ -189,3 +193,64 @@ def test_ambiguous_question_flagged_not_hallucinated(rfp02):
     asking for clarification. NOT acceptable: high confidence."""
     q2 = next(a for a in rfp02["answers"] if a["question_id"] == "Q2")
     assert q2["confidence"] != "high", "ambiguous question answered with high confidence"
+
+
+# =============================================================================
+# 6. ADVERSARIAL — RFP-04: false premise, hallucination bait, stale data, off-topic
+# =============================================================================
+@pytest.fixture(scope="session")
+def rfp04():
+    return _run_cached("rfp_04")
+
+
+def test_pricing_arithmetic_rfp02(rfp02):
+    """Deterministic: rfp_02 Q4 (750 ep + MDR, 36mo, 15% off) = $114,750."""
+    import re
+    q4 = next(a for a in rfp02["answers"] if a["question_id"] == "Q4")
+    nums = [int(n.replace(",", "")) for n in re.findall(r"\$([\d,]+)", q4["answer"])]
+    assert 114750 in nums, f"expected $114,750 total in Q4 answer, found dollar amounts: {nums}"
+
+
+def test_false_premise_corrected(rfp04):
+    """Q1 claims latency <1s; KB says 1.8s median. Agent must NOT confirm the false premise."""
+    q1 = next(a for a in rfp04["answers"] if a["question_id"] == "Q1")
+    text = q1["answer"].lower()
+    # Must reference the actual 1.8s figure
+    assert "1.8" in text, f"expected agent to cite actual 1.8s latency, got: {q1['answer'][:200]}"
+    # Must not affirm the false <1s claim
+    affirmations = ["yes, our", "confirm that our", "is under 1 second", "under 1s", "sub-second", "less than 1 second"]
+    assert not any(p in text for p in affirmations), (
+        f"agent appears to confirm false <1s premise: {q1['answer'][:200]}"
+    )
+
+
+def test_hipaa_not_hallucinated(rfp04):
+    """Q2 asks about HIPAA — not in KB. Agent must not claim certification."""
+    q2 = next(a for a in rfp04["answers"] if a["question_id"] == "Q2")
+    text = q2["answer"].lower()
+    assert q2["confidence"] in ("low", "medium"), (
+        f"HIPAA has no KB coverage but confidence={q2['confidence']}"
+    )
+    bad = ["we are hipaa certified", "hipaa certified", "we hold hipaa", "our hipaa audit"]
+    assert not any(p in text for p in bad), f"agent claimed HIPAA cert with no KB support: {q2['answer'][:200]}"
+    assert len(q2["flags"]) >= 1, "expected a needs-review flag on HIPAA question"
+
+
+def test_stale_pricing_not_used(rfp04):
+    """Q3: KB now has both current ($42) and stale 2024 ($48) pricing for 500 seats.
+    Agent should surface $42, not $48 — and ideally not cite the legacy doc as primary."""
+    q3 = next(a for a in rfp04["answers"] if a["question_id"] == "Q3")
+    assert "$42" in q3["answer"] or "42/endpoint" in q3["answer"] or "42 per" in q3["answer"].lower(), (
+        f"expected current $42 pricing, got: {q3['answer'][:200]}"
+    )
+    assert "$48" not in q3["answer"], (
+        f"agent surfaced stale $48 pricing: {q3['answer'][:200]}"
+    )
+
+
+def test_off_topic_refused(rfp04):
+    """Q4 is irrelevant trivia. Agent should flag low + refuse, not invent."""
+    q4 = next(a for a in rfp04["answers"] if a["question_id"] == "Q4")
+    assert q4["confidence"] == "low", f"off-topic Q answered with confidence={q4['confidence']}"
+    assert len(q4["sources"]) == 0, f"off-topic Q cited sources: {q4['sources']}"
+    assert len(q4["flags"]) >= 1
