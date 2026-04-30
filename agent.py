@@ -19,14 +19,24 @@ Design notes (the stuff worth saying in the demo):
     call submit_answers again with the final version. Cheap, and it
     catches the "Q1 says 2s latency, Q5 says 5s" class of bug the brief
     explicitly calls out.
+
+  * Parallel tool dispatch + prompt caching. search_kb calls within one
+    assistant turn fan out via ThreadPoolExecutor (up to MAX_PARALLEL_TOOLS).
+    The system prompt + tools array carry a cache_control: ephemeral
+    breakpoint so every turn after the first reads from cache. Both are
+    transparent to the model; usage telemetry is returned in the result
+    dict so a caller can verify caching is active.
 """
 
 import json
+from concurrent.futures import ThreadPoolExecutor
+
 import anthropic
 
 from kb import search_kb
 
 MODEL = "claude-sonnet-4-5"
+MAX_PARALLEL_TOOLS = 8
 
 SYSTEM = """\
 You are a senior Solutions Engineer at Helios Security (endpoint protection,
@@ -39,9 +49,13 @@ Process — follow it exactly:
    have a secondary category.
 
 2. RETRIEVE. For each question, call search_kb at least once with a focused
-   query (and category filter when obvious). You may call it multiple times
-   per question. Never answer from memory — every factual claim must be
-   traceable to a returned doc id.
+   query (and category filter when obvious). After parsing all questions,
+   issue your initial searches as multiple parallel tool calls in a single
+   assistant turn — the runtime fans them out concurrently, so one search
+   per question in one turn is much faster than one search per turn. Use
+   follow-up turns only when a result is ambiguous and a refined query is
+   needed. Never answer from memory — every factual claim must be traceable
+   to a returned doc id.
 
 3. DRAFT an answer for each question. 2–5 sentences, customer-facing tone,
    specific numbers where the KB provides them. Cite source doc ids inline
@@ -128,7 +142,18 @@ TOOLS = [
             },
             "required": ["answers"],
         },
+        # Cache breakpoint: caches the system prompt + the whole tools array
+        # as one prefix. Every turn after the first reads from cache.
+        "cache_control": {"type": "ephemeral"},
     },
+]
+
+
+# `system` param wrapped as a list of content blocks so we can attach a cache
+# breakpoint. The bytes here must be identical across every turn — that's the
+# cache key.
+SYSTEM_BLOCKS = [
+    {"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}},
 ]
 
 
@@ -139,6 +164,28 @@ def _dispatch(name: str, args: dict) -> str:
         hits = search_kb(args["query"], args.get("category"))
         return json.dumps(hits, indent=2)
     raise ValueError(f"unexpected tool dispatch: {name}")
+
+
+def _accumulate_usage(total: dict, usage) -> None:
+    """Sum token counters from a Messages response onto a running total.
+    Missing fields default to 0 (older SDKs / cache-disabled responses)."""
+    for k in ("input_tokens", "output_tokens",
+              "cache_creation_input_tokens", "cache_read_input_tokens"):
+        total[k] += getattr(usage, k, 0) or 0
+
+
+def _run_external_tools(tool_uses) -> dict[str, str]:
+    """Fan out every non-submit_answers tool call in parallel, return a
+    {tool_use_id: tool_result_content} map. We dispatch concurrently because
+    real retrieval is I/O-bound (HTTP / vector store) — the mock keyword
+    scorer doesn't benefit, but the architecture is right for production."""
+    external = [tu for tu in tool_uses if tu.name != "submit_answers"]
+    if not external:
+        return {}
+    workers = min(MAX_PARALLEL_TOOLS, len(external))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        outputs = list(pool.map(lambda tu: _dispatch(tu.name, tu.input), external))
+    return {tu.id: out for tu, out in zip(external, outputs)}
 
 
 def run_agent(rfp: dict, verbose: bool = True) -> dict:
@@ -155,16 +202,23 @@ def run_agent(rfp: dict, verbose: bool = True) -> dict:
     messages = [{"role": "user", "content": user_turn}]
     first_submit = None
     final_submit = None
+    total_usage = {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+    }
 
     # Hard cap so a runaway loop can't burn the demo.
     for step in range(40):
         resp = client.messages.create(
             model=MODEL,
             max_tokens=4096,
-            system=SYSTEM,
+            system=SYSTEM_BLOCKS,
             tools=TOOLS,
             messages=messages,
         )
+        _accumulate_usage(total_usage, resp.usage)
 
         # Collect any tool_use blocks from this turn.
         tool_uses = [b for b in resp.content if b.type == "tool_use"]
@@ -184,8 +238,11 @@ def run_agent(rfp: dict, verbose: bool = True) -> dict:
         # Append the assistant turn verbatim (required for tool_result pairing).
         messages.append({"role": "assistant", "content": resp.content})
 
+        # Dispatch external tools (search_kb, ...) in parallel; submit_answers
+        # is handled inline because it controls loop state.
+        external_results = _run_external_tools(tool_uses)
+
         results = []
-        triggered_review = False
         for tu in tool_uses:
             if tu.name == "submit_answers":
                 if first_submit is None:
@@ -202,7 +259,6 @@ def run_agent(rfp: dict, verbose: bool = True) -> dict:
                             "again with the corrected final version."
                         ),
                     })
-                    triggered_review = True
                 else:
                     final_submit = tu.input
                     results.append({
@@ -214,7 +270,7 @@ def run_agent(rfp: dict, verbose: bool = True) -> dict:
                 results.append({
                     "type": "tool_result",
                     "tool_use_id": tu.id,
-                    "content": _dispatch(tu.name, tu.input),
+                    "content": external_results[tu.id],
                 })
 
         messages.append({"role": "user", "content": results})
@@ -228,6 +284,7 @@ def run_agent(rfp: dict, verbose: bool = True) -> dict:
         "prospect": rfp.get("prospect"),
         "model": MODEL,
         "review_pass": final_submit is not None,
+        "usage": total_usage,
         **out,
     }
 
