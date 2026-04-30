@@ -165,6 +165,7 @@ deepeval test run test_evals.py    # full suite (19 tests), Claude-as-judge
 pytest test_evals.py -v            # same thing, plain pytest
 pytest test_evals.py -v -k "not grounding and not consistency and not multipart"
                                    # deterministic-only — runs with NO api key off cached out/
+pytest test_agent_unit.py -v       # plumbing tests — parallel dispatch + prompt caching
 ```
 
 Results cache to `out/` (committed) so re-running evals doesn't re-run the
@@ -174,6 +175,28 @@ agent. Set `HELIOS_FORCE_RERUN=1` to bust the cache.
 covers the four ways RFP agents typically fail: sycophancy on a false
 premise, hallucinating an adjacent cert (HIPAA), parroting stale data, and
 answering off-topic trivia.
+
+## Performance: parallel retrieval + prompt caching
+
+Two latency/cost optimizations on the agent loop:
+
+- **Parallel tool dispatch.** `search_kb` calls within a single assistant
+  turn fan out via a thread pool (`MAX_PARALLEL_TOOLS = 8`). The system
+  prompt asks the model to issue all initial searches in one batched turn,
+  so a 5-question RFP retrieves in ~one round-trip instead of five. The
+  mock keyword scorer is in-process and won't see speedup, but the design
+  is right for a real I/O-bound retriever (HTTP / vector store).
+- **Prompt caching.** A `cache_control: ephemeral` breakpoint sits on the
+  last tool definition, caching the system prompt + tools array as one
+  prefix. Every turn after the first reads from cache (~10× cheaper input
+  tokens). The agent's return dict now includes a `usage` block with
+  `cache_creation_input_tokens` and `cache_read_input_tokens` so you can
+  verify it from `out/*.json`. To check live: `HELIOS_FORCE_RERUN=1 python
+  run.py rfps/rfp_01.json` — `cache_read_input_tokens` should be ~0 on the
+  first turn and grow on each subsequent turn.
+
+Both behaviors are covered by `test_agent_unit.py` (mocked Anthropic
+client, no API key needed).
 
 ## Files
 
@@ -188,6 +211,7 @@ answering off-topic trivia.
 │   ├── rfp_03.json      # short FS-flavored RFP (consistency cross-check vs rfp_01)
 │   └── rfp_04.json      # adversarial: false premise, HIPAA bait, stale-data trap, off-topic
 ├── test_evals.py        # DeepEval/pytest suite — 19 tests, 3 tiers
+├── test_agent_unit.py   # plumbing unit tests (parallel dispatch, caching)
 ├── out/                 # cached agent outputs (committed, so evals run keyless)
 └── requirements.txt
 ```
